@@ -69,3 +69,64 @@ export class StockService {
   }
 }
 
+export class PaymentService {
+  constructor(private logger: Logger) {}
+
+  public processPayment(user: User, amount: number): void {
+    try {
+      user.debit(amount);
+    } catch (error) {
+      if (error instanceof PaymentFailedError) {
+        this.logger.logError(`Échec paiement pour ${user.name} : solde insuffisant (${user.getBalance()}€).`);
+      }
+      throw error;
+    }
+  }
+}
+
+export class CoffeeService {
+  constructor(public stockService: StockService, private logger: Logger) {}
+
+  public prepareCoffee(type: CoffeeType): string {
+    return `Voilà votre ${type}`;
+  }
+
+  public getStockStatus(): string {
+    return this.stockService.getStockStatus();
+  }
+}
+
+export class CoffeeMachineController {
+  private pricePerCup = 2;
+
+  constructor(
+    private paymentService: PaymentService,
+    private coffeeService: CoffeeService,
+    private logger: Logger
+  ) {}
+
+  public buyCoffee(user: User, type: CoffeeType): string {
+    try {
+      this.coffeeService.stockService.checkAndConsumeResources();
+
+      this.paymentService.processPayment(user, this.pricePerCup);
+
+      return this.coffeeService.prepareCoffee(type);
+
+    } catch (error) {
+      if (error instanceof PaymentFailedError) {
+        this.coffeeService.stockService.restoreResources();
+        return error.message;
+      }
+      if (error instanceof InsufficientResourcesError) {
+        return error.message;
+      }
+      this.logger.logError(`Erreur interne: ${(error as Error).message}`);
+      return "Une erreur est survenue, veuillez réessayer plus tard.";
+    }
+  }
+
+  public getStockInfo(): string {
+    return this.coffeeService.getStockStatus();
+  }
+}
