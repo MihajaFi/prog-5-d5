@@ -37,3 +37,35 @@ export class User {
   }
 }
 
+export class Logger {
+  logError(message: string): void {
+    console.error(`[ERROR] - ${message}`);
+  }
+}
+
+export class StockService {
+  constructor(
+    private coffeeStock: number,
+    private waterStock: number,
+    private logger: Logger
+  ) {}
+
+  public checkAndConsumeResources(): void {
+    if (this.coffeeStock <= 0 || this.waterStock <= 0) {
+      this.logger.logError("Ressources insuffisantes pour préparer le café.");
+      throw new InsufficientResourcesError();
+    }
+    this.coffeeStock--;
+    this.waterStock--;
+  }
+
+  public restoreResources(): void {
+    this.coffeeStock++;
+    this.waterStock++;
+  }
+
+  public getStockStatus(): string {
+    return `Café: ${this.coffeeStock}, Eau: ${this.waterStock}`;
+  }
+}
+
