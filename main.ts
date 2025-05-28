@@ -130,3 +130,14 @@ export class CoffeeMachineController {
     return this.coffeeService.getStockStatus();
   }
 }
+
+const logger = new Logger();
+const user = new User("1", "Alice", 5); 
+const stockService = new StockService(1, 1, logger); 
+const paymentService = new PaymentService(logger);
+const coffeeService = new CoffeeService(stockService, logger);
+const machineController = new CoffeeMachineController(paymentService, coffeeService, logger);
+
+console.log(machineController.buyCoffee(user, CoffeeType.Cappuccino));
+console.log(machineController.getStockInfo());
+console.log(machineController.buyCoffee(user, CoffeeType.IceCoffe));
